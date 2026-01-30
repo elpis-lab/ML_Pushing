@@ -1,0 +1,19 @@
+# Cache
+.idea/
+.vscode/
+__pycache__
+*log.txt
+
+# Model
+*.pt
+*.pth
+
+# Data & Results
+data/
+results/
+*.pkl
+*.npy
+
+# Test
+test/
+debug/
