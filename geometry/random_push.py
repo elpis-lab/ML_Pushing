@@ -129,19 +129,21 @@ def get_cloud_point_push(
     points, normals, angles = get_cloud_point(obj_name, n_params)
 
     # Calculate Curvature [N_points,]
-    curvatures = get_local_curvature(points, window_size=10)
-    # curvatures = get_local_PCA(points, window_size=50)
+    curvatures = get_local_curvature(points, window_size=5)
 
     # Reshape angles to [N_points, 1] for concatenation
     angles_reshaped = angles.reshape(-1, 1)
     curvatures_reshaped = curvatures.reshape(-1, 1)
 
     # Concatenate: points(3) + normals(3) + angles(1) + curvature(1) = 8
-    push_params = np.concatenate([points, normals, angles_reshaped, curvatures_reshaped], axis=1)    # [N_points, 8]
+    # push_params = np.concatenate([points, normals, angles_reshaped, curvatures_reshaped], axis=1)    # [N_points, 8]
+    push_params = np.concatenate([points[:, :2], angles_reshaped], axis=1)    # [N_points, 3]
+    
+    # push_params = np.concatenate([points, normals, angles_reshaped], axis=1)
 
     # Generate paths
-    # times, ws_paths = generate_center_push_path(
-    times, ws_paths = generate_normal_push_path(
+    times, ws_paths = generate_center_push_path(
+    # times, ws_paths = generate_normal_push_path(
         obj_states,
         obj_shape,
         push_params,
@@ -168,15 +170,18 @@ def generate_center_push_path(
 ):
     """Generate workspace paths for radial pushes toward the center"""
     # push_params [x, y, z, nx, ny, nz, angle, curvature]
-    assert push_params.ndim == 2 and push_params.shape[1] == 8, f"Expected push_params shape (N, 8), got {push_params.shape}"
+    assert push_params.ndim == 2 and push_params.shape[1] == 3, f"Expected push_params shape (N, 4), got {push_params.shape}"
+    # assert push_params.ndim == 2 and push_params.shape[1] == 7, f"Expected push_params shape (N, 7), got {push_params.shape}"
     
     n_data = push_params.shape[0]
+
+    # import ipdb; ipdb.set_trace()
     
     # Unpack data
-    contact_points = push_params[:, :3]      # [N, 3] - (x, y, z)
-    contact_normals = push_params[:, 3:6]    # [N, 3] - (nx, ny, nz)
-    angles = push_params[:, 6]               # [N,] - angle in radians
-    curvatures = push_params[:, 7]           # [N,] - curvatures
+    contact_points = push_params[:, :2]      # [N, 3] - (x, y)
+    # contact_normals = push_params[:, 3:6]    # [N, 3] - (nx, ny, nz)
+    angles = push_params[:, 2]               # [N,] - angle in radians
+    # curvatures = push_params[:, 7]           # [N,] - curvatures
     
     # Calculate Object "Radius" (Max extent from center)
     length_x, length_y, _ = obj_shape
@@ -246,7 +251,8 @@ def generate_normal_push_path(
 ):
     """Generate workspace paths for radial pushes toward the center"""
     # push_params [x, y, z, nx, ny, nz, angle, curvature]
-    assert push_params.ndim == 2 and push_params.shape[1] == 8, f"Expected push_params shape (N, 8), got {push_params.shape}"
+    assert push_params.ndim == 2 and push_params.shape[1] == 3, f"Expected push_params shape (N, 4), got {push_params.shape}"
+    # assert push_params.ndim == 2 and push_params.shape[1] == 7, f"Expected push_params shape (N, 7), got {push_params.shape}"
     
     n_data = push_params.shape[0]
     
@@ -254,7 +260,7 @@ def generate_normal_push_path(
     contact_points = push_params[:, :3]      # [N, 3] - (x, y, z)
     contact_normals = push_params[:, 3:6]    # [N, 3] - (nx, ny, nz)
     angles = push_params[:, 6]               # [N,] - angle in radians
-    curvatures = push_params[:, 7]           # [N,] - curvatures
+    # curvatures = push_params[:, 7]           # [N,] - curvatures
     
     # Calculate Object "Radius" (Max extent from center)
     length_x, length_y, _ = obj_shape
